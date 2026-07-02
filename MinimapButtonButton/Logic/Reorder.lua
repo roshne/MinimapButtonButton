@@ -21,6 +21,7 @@ local TARGET_COLOR = {0.2, 1, 0.4, 0.55};
 local active = false;
 local overlays = {};
 local currentTarget;
+local wasShown;
 
 local refreshOverlays;
 
@@ -63,7 +64,9 @@ local function findNearestButton (draggedButton)
   local nearestDistance;
 
   for _, button in ipairs(Main.collectedButtons) do
-    if (button ~= draggedButton and isButtonDisplayed(button)) then
+    -- Only named buttons take part: the saved order is keyed by name, so an
+    -- anonymous button can't be a persistable drop target (see refreshOverlays).
+    if (button ~= draggedButton and isButtonDisplayed(button) and button:GetName()) then
       local centerX, centerY = getScreenCenter(button);
 
       if (centerX) then
@@ -137,8 +140,9 @@ local function createOverlay ()
 
     -- Forward to the button's own handler so the user sees its real tooltip;
     -- fall back to the frame name for buttons that have no tooltip of their own.
+    -- pcall the third-party handler so its error can't bubble through the overlay.
     if (onEnter) then
-      onEnter(button);
+      pcall(onEnter, button);
     else
       GameTooltip:SetOwner(self, 'ANCHOR_RIGHT');
       GameTooltip:SetText(button:GetName() or 'Unnamed button');
@@ -150,7 +154,7 @@ local function createOverlay ()
     local onLeave = self.button:GetScript('OnLeave');
 
     if (onLeave) then
-      onLeave(self.button);
+      pcall(onLeave, self.button);
     end
 
     GameTooltip:Hide();
@@ -196,7 +200,9 @@ function refreshOverlays ()
   end
 
   for _, button in ipairs(Main.collectedButtons) do
-    if (isButtonDisplayed(button)) then
+    -- Skip anonymous buttons: their order can't be persisted (persistCurrentOrder
+    -- / sortCollectedButtons key by name), so don't offer a reorder that won't stick.
+    if (isButtonDisplayed(button) and button:GetName()) then
       local overlay = overlays[button] or createOverlay();
 
       overlays[button] = overlay;
@@ -225,12 +231,24 @@ local function setActive (value)
   Main.setAutoCloseSuppressed(value);
 
   if (value) then
-    Main.showButtons();
+    -- Remember whether the container was already open so exiting arrange mode
+    -- restores the prior state instead of leaving it shown (and persisted).
+    wasShown = Main.buttonContainer:IsShown();
+
+    if (not wasShown) then
+      Main.showButtons();
+    end
+
     refreshOverlays();
     Utils.printAddonMessage(
         'arrange mode ON - drag the icons to reposition them, then run the command again to finish.');
   else
     hideOverlays();
+
+    if (not wasShown) then
+      Main.hideButtons();
+    end
+
     Utils.printAddonMessage('arrange mode OFF.');
   end
 end
@@ -241,7 +259,8 @@ end
 
 SlashCommands.addCommand({'arrange', 'reorder'}, toggle);
 HelpCommands.addHelper({'arrange', 'reorder'},
-    'Toggles arrange mode. While active, drag the collected icons to reposition them; their order is saved. Run the command again to finish.');
+    'Toggles arrange mode. While active, drag the collected icons to reposition ' ..
+    'them; their order is saved. Run the command again to finish.');
 
 module.toggle = toggle;
 module.refreshOverlays = refreshOverlays;
