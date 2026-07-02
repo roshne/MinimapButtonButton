@@ -472,6 +472,7 @@ local function initMainButton ()
     elseif (button == LEFTBUTTON) then
       toggleButtons();
     elseif (button == RIGHTBUTTON) then
+      -- Right-click toggles arrange mode (also available via /mbb arrange).
       Reorder.toggle();
     end
   end);
@@ -525,7 +526,8 @@ end
 local function addDraggingTooltip ()
   Tooltip.createTooltip(mainButton, {
       'You can drag the button using the middle mouse button',
-      'or any mouse button while holding ALT.'
+      'or any mouse button while holding ALT.',
+      'Right-click to arrange the collected icons.'
     });
 end
 

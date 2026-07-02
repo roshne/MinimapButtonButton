@@ -259,8 +259,9 @@ end
 
 SlashCommands.addCommand({'arrange', 'reorder'}, toggle);
 HelpCommands.addHelper({'arrange', 'reorder'},
-    'Toggles arrange mode. While active, drag the collected icons to reposition ' ..
-    'them; their order is saved. Run the command again to finish.');
+    'Toggles arrange mode (also bound to right-clicking the main button). While ' ..
+    'active, drag the collected icons to reposition them; their order is saved. ' ..
+    'Run the command again to finish.');
 
 module.toggle = toggle;
 module.refreshOverlays = refreshOverlays;
