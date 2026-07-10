@@ -141,6 +141,11 @@ local function collectLibDBIconButtons ()
     return;
   end
 
+  if (type(LibDBIcon.RegisterCallback) ~= "function") then
+    _G.geterrorhandler()("LibDBIcon is loaded but it's missing the GetButtonList function.");
+    return;
+  end
+
   for _, buttonName in ipairs(LibDBIcon:GetButtonList()) do
     local button = LibDBIcon:GetMinimapButton(buttonName);
 
@@ -490,6 +495,11 @@ local function hookLibDBIconButtons ()
   local LibDBIcon = getLibDBIcon();
 
   if (not LibDBIcon) then
+    return;
+  end
+
+  if (type(LibDBIcon.RegisterCallback) ~= "function") then
+    _G.geterrorhandler()("LibDBIcon is loaded but it's missing the RegisterCallback function.");
     return;
   end
 
