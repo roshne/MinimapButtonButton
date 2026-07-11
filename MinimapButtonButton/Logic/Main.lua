@@ -331,7 +331,16 @@ local function shouldButtonBeCollected (button)
 end
 
 local function scanMinimapChildren ()
-  for _, child in ipairs({Minimap:GetChildren()}) do
+  local results = {pcall(Minimap.GetChildren, Minimap)};
+
+  if (results[1] == false) then
+    _G.geterrorhandler()("Error when retrieving minimap children. This usually happens when you have too many minimap pins.");
+    return;
+  end
+
+  for x = 2, #results, 1 do
+    local child = results[x];
+
     if (shouldButtonBeCollected(child)) then
       collectButton(child);
     end
